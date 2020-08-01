@@ -24,7 +24,7 @@ pc_cell_x_size = 0.015
 exp_delta_pc_threshold = 2
 
 [map]
-exp_loops=20
+exp_loops=21
 exp_initial_em_deg=140
 
 [draw]
