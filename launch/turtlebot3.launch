@@ -1,0 +1,15 @@
+
+<launch>
+
+	<remap from="/turtlebot3/camera/image/compressed" to="/camera/rgb/image_raw/compressed" />
+        <remap from="/turtlebot3/odom" to="/odom" />
+	<machine name="local_alt" address="localhost" default="true" />
+	<node name="RatSLAMLocalViewCells" pkg="ratslam_ros" type="ratslam_lv" args="$(find ratslam_ros)/config/config_turtlebot3.txt.in _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMPoseCells" pkg="ratslam_ros" type="ratslam_pc" args="$(find ratslam_ros)/config/config_turtlebot3.txt.in _image_transport:=compressed" cwd="node" required="true" />
+	<node name="RatSLAMExperienceMap" pkg="ratslam_ros" type="ratslam_em" args="$(find ratslam_ros)/config/config_turtlebot3.txt.in _image_transport:=compressed" cwd="node" required="true" />
+	<!--<node name="RatSLAMVisualOdometry" pkg="ratslam_ros" type="ratslam_vo" args="$(find ratslam_ros)/config/config_turtlebot3.txt.in _image_transport:=compressed" cwd="node" required="true" />-->
+	
+	<!--<node pkg="rqt_plot" type="rqt_plot" name="plot_vt_em" args="/turtlebot3/LocalView/Template/current_id,/turtlebot3/PoseCell/TopologicalAction/dest_id" />-->
+	<!--<node pkg="rosbag" type="record" name="record" args="/turtlebot3/ExperienceMap/Map /turtlebot3/ExperienceMap/RobotPose /turtlebot3/LocalView/Template /turtlebot3/PoseCell/TopologicalAction -O ratslam_out.bag" />-->
+
+</launch>
