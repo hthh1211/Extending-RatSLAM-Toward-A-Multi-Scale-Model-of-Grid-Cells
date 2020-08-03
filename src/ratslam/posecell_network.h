@@ -109,7 +109,31 @@ public:
   {
     return best_th;
   }
+  double vt_delta() 
+{
+     return vt_delta_pc_th;
+}
 
+double posecell_xsize()
+{
+  return PC_CELL_X_SIZE;
+};
+
+int pc_dim_xy()
+{
+   return PC_DIM_XY;
+};
+
+ int pc_dim_th()
+ {
+    return PC_DIM_TH;
+ }
+
+ double exp_elta_pc_threshold()
+ {
+   return  EXP_DELTA_PC_THRESHOLD;
+ }
+ 
   // get and set all the cells as one array
   double * get_cells();
   bool set_cells(double * cells);
@@ -238,6 +262,7 @@ private:
   double best_x;
   double best_y;
   double best_th;
+ // double best_th_corrected;
 
   double vt_delta_pc_th;
 
@@ -294,25 +319,30 @@ class MultiplePosecellNetwork
 public:
   enum MultiplePosecellAction {NO_ACTION = 0, CREATE_NODE, CREATE_EDGE, SET_NODE};
 
-  MultiplePosecellNetwork();
+  MultiplePosecellNetwork(std::vector<double> &  GridSpacingRatio,std::vector<int>& PcDimXYMul,std::vector<int> & PcDimThMul,double ExpDeltaPcThrethodMul);
   ~MultiplePosecellNetwork(){
     ;
   };
+  
+  void read_bestpositions(std::vector<std::vector<double>> &bestposecellposition,std::vector<double> &vt_delta_pc_ths);
+  MultiplePosecellAction get_action();
 
-  MultiplePosecellAction get_action(std::vector<std::vector<double>> &posecellparis);
-
-  double get_delta_pc_mul(std::vector<std::vector<double>> &posecellposition);
+double get_delta_pc_mul(std::vector<std::vector<double>> &posecellposition);
 
 private:
-  void create_experience(std::vector<std::vector<double>> &posecellparis);   
+  void create_experience();   
  double get_min_delta_mul(double d1, double d2, double max);
 
-  std::vector<PosecellExperience_Multiple> experiences_multiple;
-  unsigned int current_exp_mul, prev_exp_mul;
+  //std::vector<PosecellExperience_Multiple> experiences_multiple;
+  std::vector<std::vector<std::vector<double>>> experiences_multiple;
+  unsigned int current_exp_mul;
   std::vector<std::vector<double>> bestposition;
+  std::vector<double> vt_delta_pc_th_mul;
   std::vector<double> grid_spacing_ratio;
   double EXP_DELTA_PC_THRESHOLD_MUL;
   std::vector<int> PC_DIM_XY_MUL;
+  std::vector<int> PC_DIM_TH_MUL;
+
 };
 
 }

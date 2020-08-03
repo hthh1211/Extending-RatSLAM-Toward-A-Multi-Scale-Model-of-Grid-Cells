@@ -63,7 +63,9 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellN
   static ros::Time prev_time(0);
   if (prev_time.toSec() > 0)
   {
-    
+    std::vector<std::vector<double>> best_xyth_multiple;
+    std::vector<double> best_xyth;
+    std::vector<double> th_vt_delta_pc_mul;
     double time_diff = (odo->header.stamp - prev_time).toSec();
     int index=0;
     //int pcns_size=pcns.size();
@@ -86,9 +88,18 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellN
             //if(index==2){pub_pc_2->publish(pc_output);}
             ROS_DEBUG_STREAM("PC:action_publish{odo}{" << ros::Time::now() << "} action{" << pc_output.header.seq << "}=" <<  pc_output.action << " src=" << pc_output.src_id << " dest=" << pc_output.dest_id);
           }
+          th_vt_delta_pc_mul.push_back(element->vt_delta());
+          best_xyth.push_back(element->x());
+          best_xyth.push_back(element->y());
+          best_xyth.push_back(element->th());
+          best_xyth_multiple.push_back(best_xyth);
+          best_xyth.clear();
           index++;
     }
     
+     mpc->read_bestpositions(best_xyth_multiple,th_vt_delta_pc_mul);
+     mpc->get_action();
+     th_vt_delta_pc_mul.clear();
 
 #ifdef HAVE_IRRLICHT
 	if (use_graphics)
@@ -166,8 +177,23 @@ int main(int argc, char * argv[])
   pcns.push_back(pc_1);
   pcns.push_back(pc_2);
 
-  ratslam::MultiplePosecellNetwork *mpc=new ratslam::MultiplePosecellNetwork();
+  std::vector<double> POSECELL_XSIZE;
+    std::vector<double> grid_spacing_ratio;
+  double EXP_DELTA_PC_THRESHOLD_MUL;
+  std::vector<int> PC_DIM_XY_MUL;
+  std::vector<int> PC_DIM_TH_MUL;
 
+  for (auto&& element:pcns)
+  {  
+      POSECELL_XSIZE.push_back(element->posecell_xsize());
+      PC_DIM_XY_MUL.push_back(element->pc_dim_xy());
+      PC_DIM_TH_MUL.push_back(element->pc_dim_th());
+      EXP_DELTA_PC_THRESHOLD_MUL=element->exp_elta_pc_threshold(); //only the smallest module threshold is used.
+  }
+  double smallest_posecell_xsize=POSECELL_XSIZE[POSECELL_XSIZE.size()-1];
+  for  (auto&& element:POSECELL_XSIZE){grid_spacing_ratio.push_back(element/smallest_posecell_xsize);};
+
+  ratslam::MultiplePosecellNetwork *mpc=new ratslam::MultiplePosecellNetwork(grid_spacing_ratio,PC_DIM_XY_MUL,PC_DIM_TH_MUL, EXP_DELTA_PC_THRESHOLD_MUL);
 
   ros::Publisher pub_pc_1 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_1", 0);
   ros::Publisher pub_pc_2 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_2", 0);

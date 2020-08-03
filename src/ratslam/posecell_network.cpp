@@ -680,6 +680,7 @@ double PosecellNetwork::get_delta_pc(double x, double y, double th)
 	pc_th_corrected = PC_DIM_TH + pc_th_corrected;
   if (pc_th_corrected >= PC_DIM_TH)
 	pc_th_corrected = pc_th_corrected - PC_DIM_TH;
+  //best_th_corrected=pc_th_corrected;
   return sqrt(pow(get_min_delta(best_x, x, PC_DIM_XY), 2) + pow(get_min_delta(best_y, y, PC_DIM_XY), 2) + pow(get_min_delta(pc_th_corrected, th, PC_DIM_TH), 2));
 }
 
@@ -1071,26 +1072,64 @@ void PosecellNetwork::on_view_template(unsigned int vt, double vt_rad)
 vt_update = true;
 }
 
-MultiplePosecellNetwork::MultiplePosecellNetwork(){
+MultiplePosecellNetwork::MultiplePosecellNetwork(std::vector<double>&  GridSpacingRatio,std::vector<int>& PcDimXYMul,std::vector<int>& PcDimThMul,double ExpDeltaPcThrethodMul){
   current_exp_mul=0;
+  grid_spacing_ratio=GridSpacingRatio;
+  PC_DIM_XY_MUL=PcDimXYMul;
+  PC_DIM_TH_MUL=PcDimThMul;
+  EXP_DELTA_PC_THRESHOLD_MUL=ExpDeltaPcThrethodMul;
 }
+
+void MultiplePosecellNetwork::read_bestpositions(std::vector<std::vector<double>> &bestposecellposition,std::vector<double> &vt_delta_pc_ths)
+{
+  bestposition=bestposecellposition;
+  vt_delta_pc_th_mul=vt_delta_pc_ths;
+};
 
 double MultiplePosecellNetwork::get_delta_pc_mul(std::vector<std::vector<double>> &posecellposition)
 {
-  int posecell_index=0;
+  unsigned int posecell_index=0;
   int coordinate_index;
   double distance=0;
-  for (auto&& IndividualPoseCell:posecellposition) 
+
+  //double temp0_0=posecellposition[0][0];
+  //double temp0_1=posecellposition[0][1];
+  //double temp0_2=posecellposition[0][2];
+  //double temp1_0=posecellposition[1][0];
+  //double temp1_1=posecellposition[1][1];
+  //double temp1_2=posecellposition[1][2];
+
+  //std::vector< std::vector<double> >::const_iterator IndividualPoseCell; 
+  //std::vector<double>::const_iterator element;
+
+//for (auto& IndividualPoseCell:posecellposition) 
+//for (IndividualPoseCell = posecellposition.begin(); IndividualPoseCell != posecellposition.end(); ++IndividualPoseCell)
+for (posecell_index; posecell_index<posecellposition.size();++posecell_index)
   {
     coordinate_index=0;
     if(posecell_index==0)
-    { 
-      for(auto&& element:IndividualPoseCell)
-      {
-           distance=distance+pow(get_min_delta_mul(bestposition[posecell_index][coordinate_index], element, PC_DIM_XY_MUL[posecell_index])*grid_spacing_ratio[posecell_index], 2); 
+    {
+      //for(auto& element:IndividualPoseCell)
+      //for (element = IndividualPoseCell->begin(); element != IndividualPoseCell->end(); ++element)
+      for(coordinate_index=0;coordinate_index<3;++coordinate_index)
+      { 
+        //double temp=posecellposition[posecell_index][coordinate_index];
+        //double temp_individual=IndividualPoseCell[coordinate_index];
+        //double temp_best=bestposition[posecell_index][coordinate_index];
+        int temp_pc=PC_DIM_XY_MUL[posecell_index];
+        if(coordinate_index<=1)
+       {
+           distance=distance+pow(get_min_delta_mul(bestposition[posecell_index][coordinate_index], posecellposition[posecell_index][coordinate_index], PC_DIM_XY_MUL[posecell_index])*grid_spacing_ratio[posecell_index], 2); 
+       }else{
+         double pc_th_corrected_mul = bestposition[posecell_index][coordinate_index] - vt_delta_pc_th_mul[posecell_index];
+          if (pc_th_corrected_mul < 0) 
+          pc_th_corrected_mul = PC_DIM_XY_MUL[posecell_index] + pc_th_corrected_mul;
+          if (pc_th_corrected_mul >= PC_DIM_XY_MUL[posecell_index] )
+          pc_th_corrected_mul = pc_th_corrected_mul - PC_DIM_XY_MUL[posecell_index] ;
+          distance=distance+pow(get_min_delta_mul(pc_th_corrected_mul, posecellposition[posecell_index][coordinate_index], PC_DIM_XY_MUL[posecell_index]), 2); 
+       }
            ++coordinate_index;
       }
-    
     }
     ++posecell_index;
   };
@@ -1103,18 +1142,19 @@ double MultiplePosecellNetwork::get_min_delta_mul(double d1, double d2, double m
   return min(absval, max - absval);
 }
 
-void MultiplePosecellNetwork::create_experience(std::vector<std::vector<double>> &posecellparis)
+void MultiplePosecellNetwork::create_experience()
 {
 //  PosecellVisualTemplate * pcvt = &visual_templates[current_vt];
   experiences_multiple.resize(experiences_multiple.size() + 1);
   current_exp_mul = experiences_multiple.size() - 1;
-  PosecellExperience_Multiple * exp_mul = &experiences_multiple[current_exp_mul];
-  exp_mul->posecells_position=posecellparis;
+  //PosecellExperience_Multiple * exp_mul = &experiences_multiple[current_exp_mul];
+  //exp_mul->posecells_position=bestposition;
+  experiences_multiple[current_exp_mul]=bestposition;
 //  pcvt->exps.push_back(current_exp);
 }
 
 
-MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_action(std::vector<std::vector<double>> &posecellparis)
+MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_action()
 {
   PosecellExperience_Multiple * experience_mul;
   double delta_pc_mul;
@@ -1123,12 +1163,13 @@ MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_act
 
   if (experiences_multiple.size() == 0)
   {
-    create_experience(posecellparis);
+    create_experience();
     action = CREATE_NODE;
   } else {
-    experience_mul = &experiences_multiple[current_exp_mul];
+    //experience_mul = &experiences_multiple[current_exp_mul];
 
-    delta_pc_mul = get_delta_pc_mul(experience_mul->posecells_position);
+    //delta_pc_mul = get_delta_pc_mul(experience_mul->posecells_position);
+    delta_pc_mul = get_delta_pc_mul(experiences_multiple[current_exp_mul]);
 
    if (delta_pc_mul > EXP_DELTA_PC_THRESHOLD_MUL)
     {
@@ -1146,9 +1187,9 @@ MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_act
         if (current_exp_mul == i)
           continue;
 
-        experience_mul = &experiences_multiple[i];
-        delta_pc_mul = get_delta_pc_mul(experience_mul->posecells_position);
-
+        //experience_mul = &experiences_multiple[i];
+        //delta_pc_mul = get_delta_pc_mul(experience_mul->posecells_position);
+           delta_pc_mul = get_delta_pc_mul(experiences_multiple[i]);
         if (delta_pc_mul < min_delta)
         {
           min_delta = delta_pc_mul;
@@ -1167,7 +1208,7 @@ MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_act
       {
         if (matched_exp_id == -1)
         {
-          create_experience(posecellparis);
+          create_experience();
           action = CREATE_NODE;
         }
         else
