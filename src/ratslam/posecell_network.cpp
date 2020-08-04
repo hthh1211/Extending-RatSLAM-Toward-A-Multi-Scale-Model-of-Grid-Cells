@@ -1116,7 +1116,7 @@ for (posecell_index; posecell_index<posecellposition.size();++posecell_index)
         //double temp=posecellposition[posecell_index][coordinate_index];
         //double temp_individual=IndividualPoseCell[coordinate_index];
         //double temp_best=bestposition[posecell_index][coordinate_index];
-        int temp_pc=PC_DIM_XY_MUL[posecell_index];
+        //int temp_pc=PC_DIM_XY_MUL[posecell_index];
         if(coordinate_index<=1)
        {
            distance=distance+pow(get_min_delta_mul(bestposition[posecell_index][coordinate_index], posecellposition[posecell_index][coordinate_index], PC_DIM_XY_MUL[posecell_index])*grid_spacing_ratio[posecell_index], 2); 

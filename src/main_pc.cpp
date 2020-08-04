@@ -55,6 +55,31 @@ ratslam_ros::TopologicalAction pc_output;
 
 //int module_display_id=2;
 
+//auto posecell_module(unsigned int index,unsigned int size,std::vector<ratslam::PosecellNetwork*> &pcns,ratslam::MultiplePosecellNetwork * mpc)
+//{
+//if(index<size){auto& element=pcns[index];};
+//if(index=size){auto& element=mpc;};
+//return element;
+//}
+
+template<typename T> void publish_posecells_message(T& element,ros::Publisher &pub_pc)
+{
+          pc_output.src_id = element->get_current_exp_id();
+          pc_output.action = element->get_action();
+          if (pc_output.action != ratslam::PosecellNetwork::NO_ACTION)
+          {
+            pc_output.header.stamp = ros::Time::now();
+            pc_output.header.seq++;
+            pc_output.dest_id = element->get_current_exp_id();
+            pc_output.relative_rad = element->get_relative_rad();
+            //if(index==1){
+              pub_pc.publish(pc_output);
+              //}
+            //if(index==2){pub_pc_2->publish(pc_output);}
+            ROS_DEBUG_STREAM("PC:action_publish{odo}{" << ros::Time::now() << "} action{" << pc_output.header.seq << "}=" <<  pc_output.action << " src=" << pc_output.src_id << " dest=" << pc_output.dest_id);
+          }
+}
+
 void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellNetwork*> &pcns, ratslam::MultiplePosecellNetwork * mpc,std::vector<ros::Publisher> &pub_pc)
 //void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellNetwork*> &pcns, std::vector<ros::Publisher> &pub_pc)
 {
@@ -67,49 +92,47 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellN
     std::vector<double> best_xyth;
     std::vector<double> th_vt_delta_pc_mul;
     double time_diff = (odo->header.stamp - prev_time).toSec();
-    int index=0;
+    unsigned int index=0;
+    unsigned int size=pcns.size();
     //int pcns_size=pcns.size();
-    for (auto&& element:pcns)
+    //for (auto&& element:pcns)
+    for(index;index<size+1;++index)
     {  
-      pc_output.src_id = element->get_current_exp_id();
+      //auto& element=posecell_module(index,pcns.size(),);
+           
           //if(index==module_display_id){
-            element->on_odo(odo->twist.twist.linear.x, odo->twist.twist.angular.z, time_diff);
+            
             //}
-          pc_output.action = element->get_action();
-          if (pc_output.action != ratslam::PosecellNetwork::NO_ACTION)
-          {
-            pc_output.header.stamp = ros::Time::now();
-            pc_output.header.seq++;
-            pc_output.dest_id = element->get_current_exp_id();
-            pc_output.relative_rad = element->get_relative_rad();
-            //if(index==1){
-              pub_pc[index].publish(pc_output);
-              //}
-            //if(index==2){pub_pc_2->publish(pc_output);}
-            ROS_DEBUG_STREAM("PC:action_publish{odo}{" << ros::Time::now() << "} action{" << pc_output.header.seq << "}=" <<  pc_output.action << " src=" << pc_output.src_id << " dest=" << pc_output.dest_id);
-          }
-          th_vt_delta_pc_mul.push_back(element->vt_delta());
-          best_xyth.push_back(element->x());
-          best_xyth.push_back(element->y());
-          best_xyth.push_back(element->th());
-          best_xyth_multiple.push_back(best_xyth);
-          best_xyth.clear();
-          index++;
+          if(index==size){
+            mpc->read_bestpositions(best_xyth_multiple,th_vt_delta_pc_mul);
+            publish_posecells_message(mpc,pub_pc[index]);
+            th_vt_delta_pc_mul.clear();
+           }
+          else{
+            pcns[index]->on_odo(odo->twist.twist.linear.x, odo->twist.twist.angular.z, time_diff);
+            publish_posecells_message(pcns[index],pub_pc[index]);
+            th_vt_delta_pc_mul.push_back(pcns[index]->vt_delta());
+            best_xyth.push_back(pcns[index]->x());
+            best_xyth.push_back(pcns[index]->y());
+            best_xyth.push_back(pcns[index]->th());
+            best_xyth_multiple.push_back(best_xyth);
+            best_xyth.clear();
+          };
     }
     
-     mpc->read_bestpositions(best_xyth_multiple,th_vt_delta_pc_mul);
-     mpc->get_action();
-     th_vt_delta_pc_mul.clear();
+//     mpc->read_bestpositions(best_xyth_multiple,th_vt_delta_pc_mul);
+     //mpc->get_action();
+     //
 
 #ifdef HAVE_IRRLICHT
 	if (use_graphics)
 	{
-    int index=1;
+//    int index=1;
     for (auto&& element:pcss){
     //if(index==2){
 		element->update_scene();
 		element->draw_all();//}
-    index++;
+//    index++;
     }
 	}
 #endif
@@ -132,12 +155,12 @@ void template_callback(ratslam_ros::ViewTemplateConstPtr vt, std::vector<ratslam
 #ifdef HAVE_IRRLICHT
 	if (use_graphics)
 	{
-    int index=1;
+ //   int index=1;
     for (auto&& element:pcss){
     //if(index==2){
 		element->update_scene();
 		element->draw_all();//}
-    index++;
+ //   index++;
     }
 	}
 #endif
@@ -197,9 +220,13 @@ int main(int argc, char * argv[])
 
   ros::Publisher pub_pc_1 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_1", 0);
   ros::Publisher pub_pc_2 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_2", 0);
+
+  ros::Publisher pub_pc_4 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_4", 0);
   std::vector<ros::Publisher> pub_pc;
   pub_pc.push_back(pub_pc_1);
   pub_pc.push_back(pub_pc_2);
+
+  pub_pc.push_back(pub_pc_4);
 
   ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, pcns, mpc,pub_pc), ros::VoidConstPtr(),
                                                                     ros::TransportHints().tcpNoDelay());          
@@ -216,8 +243,8 @@ int main(int argc, char * argv[])
   if (use_graphics)
   {
   //pcs_3 = new ratslam::PosecellScene(draw_settings, pc_3,L"3");  
+    pcs_2 = new ratslam::PosecellScene(draw_settings, pc_2,L"2",2);
   pcs_1 = new ratslam::PosecellScene(draw_settings, pc_1,L"1",1);
-  pcs_2 = new ratslam::PosecellScene(draw_settings, pc_2,L"2",2);
 
   pcss.push_back(pcs_1);
   pcss.push_back(pcs_2);

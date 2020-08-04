@@ -46,10 +46,10 @@ public:
   window_width = 400;
   window_height = 400;
   std::wstring caption_name(L"openRatSLAM Pose Cell Network "+ std::wstring(module_id));
-  if(id_module==2){
+  if(id_module==1){
     param.DriverType = irr::video::EDT_OPENGL;
     }
-  if(id_module==1){param.DriverType = irr::video::EDT_SOFTWARE;}
+  if(id_module==2){param.DriverType = irr::video::EDT_SOFTWARE;}
   param.WindowSize=irr::core::dimension2d<irr::u32>(window_width, window_height);
   param.Bits=32;
   param.Fullscreen=false;

@@ -55,19 +55,22 @@ visualization_msgs::Marker em_marker;
 #include "graphics/experience_map_scene.h"
 ratslam::ExperienceMapScene *ems_1;
 ratslam::ExperienceMapScene *ems_2;
+
+ratslam::ExperienceMapScene *ems_4;
 std::vector<ratslam::ExperienceMapScene*> emss;
 bool use_graphics;
 #endif
 
 using namespace ratslam;
 
-void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
+void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::ExperienceMap *> & ems)
 {
   ROS_DEBUG_STREAM("EM:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
 
   static ros::Time prev_time(0);
 
-  if (prev_time.toSec() > 0)
+for(auto &em:ems){
+ if (prev_time.toSec() > 0)
   {
     double time_diff = (odo->header.stamp - prev_time).toSec();
     em->on_odo(odo->twist.twist.linear.x, odo->twist.twist.angular.z, time_diff);
@@ -122,6 +125,9 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, ratslam::ExperienceMap *em)
       path.header.seq++;
     }
   }
+
+}
+  
 
   prev_time = odo->header.stamp;
 }
@@ -278,6 +284,13 @@ int main(int argc, char * argv[])
   ratslam::ExperienceMap * em_1 = new ratslam::ExperienceMap(ratslam_settings);
   ratslam::ExperienceMap * em_2 = new ratslam::ExperienceMap(ratslam_settings);
 
+  ratslam::ExperienceMap * em_4 = new ratslam::ExperienceMap(ratslam_settings);
+  std::vector<ratslam::ExperienceMap *> ems;
+  ems.push_back(em_1);
+  ems.push_back(em_2);
+
+  ems.push_back(em_4); 
+
   pub_em = node.advertise<ratslam_ros::TopologicalMap>(topic_root + "/ExperienceMap/Map", 1);
   pub_em_markers = node.advertise<visualization_msgs::Marker>(topic_root + "/ExperienceMap/MapMarker", 1);
 
@@ -285,14 +298,16 @@ int main(int argc, char * argv[])
 
   pub_goal_path = node.advertise<nav_msgs::Path>(topic_root + "/ExperienceMap/PathToGoal", 1);
 
-  ros::Subscriber sub_odometry_1 = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, em_1), ros::VoidConstPtr(),
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, ems), ros::VoidConstPtr(),
                                                                     ros::TransportHints().tcpNoDelay());
-    ros::Subscriber sub_odometry_2 = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, em_2), ros::VoidConstPtr(),
-                                                                    ros::TransportHints().tcpNoDelay());                                                                  
+
   ros::Subscriber sub_action_1 = node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_1", 0, boost::bind(action_callback, _1, em_1),
                                                                               ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
 
-    ros::Subscriber sub_action_2 = node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_2", 0, boost::bind(action_callback, _1, em_2),
+  ros::Subscriber sub_action_2 = node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_2", 0, boost::bind(action_callback, _1, em_2),
+                                                                              ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());
+
+  ros::Subscriber sub_action_4 = node.subscribe<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_4", 0, boost::bind(action_callback, _1, em_4),
                                                                               ros::VoidConstPtr(), ros::TransportHints().tcpNoDelay());                                                                            
 
   ros::Subscriber sub_goal_1 = node.subscribe<geometry_msgs::PoseStamped>(topic_root + "/ExperienceMap/SetGoalPose", 0, boost::bind(set_goal_pose_callback, _1, em_1),
@@ -306,10 +321,13 @@ int main(int argc, char * argv[])
   get_setting_from_ptree(use_graphics, draw_settings, "enable", true);
   if (use_graphics)
   {
-    ems_1 = new ratslam::ExperienceMapScene(draw_settings, em_1,L"1",1);
-    ems_2 = new ratslam::ExperienceMapScene(draw_settings, em_1,L"2",2);
+    ems_1 = new ratslam::ExperienceMapScene(draw_settings, em_1,L"openRatSLAM Experience Map 1",1);
+    ems_2 = new ratslam::ExperienceMapScene(draw_settings, em_2,L"openRatSLAM Experience Map 2",2);
+
+    ems_4 = new ratslam::ExperienceMapScene(draw_settings, em_4,L"The Map",4);
     emss.push_back(ems_1);
     emss.push_back(ems_2);
+    emss.push_back(ems_4);
   }
 #endif
 

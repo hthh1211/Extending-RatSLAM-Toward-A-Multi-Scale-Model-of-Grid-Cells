@@ -329,6 +329,20 @@ public:
 
 double get_delta_pc_mul(std::vector<std::vector<double>> &posecellposition);
 
+unsigned int get_current_exp_id() { return current_exp_mul; }
+
+double get_relative_rad() { 
+  double sum_rad=0;
+  double sum_pcdimth=0; 
+  unsigned index=0;
+  unsigned size=vt_delta_pc_th_mul.size();
+  for(index;index<size;++index){
+    sum_rad=sum_rad+vt_delta_pc_th_mul[index];
+    sum_pcdimth=sum_pcdimth+PC_DIM_TH_MUL[index];
+     };
+  return sum_rad/size * 2.0 * M_PI / (sum_pcdimth/PC_DIM_TH_MUL.size()); 
+  }
+
 private:
   void create_experience();   
  double get_min_delta_mul(double d1, double d2, double max);
