@@ -308,10 +308,6 @@ private:
 
 };
 
-struct PosecellExperience_Multiple {
-
-std::vector<std::vector<double>> posecells_position;
-};
 
 class MultiplePosecellNetwork
 {
@@ -327,7 +323,7 @@ public:
   void read_bestpositions(std::vector<std::vector<double>> &bestposecellposition,std::vector<double> &vt_delta_pc_ths);
   MultiplePosecellAction get_action();
 
-double get_delta_pc_mul(std::vector<std::vector<double>> &posecellposition);
+double get_delta_pc_mul(std::vector<std::vector<int>> &posecellposition);
 
 unsigned int get_current_exp_id() { return current_exp_mul; }
 
@@ -348,8 +344,9 @@ private:
  double get_min_delta_mul(double d1, double d2, double max);
 
   //std::vector<PosecellExperience_Multiple> experiences_multiple;
-  std::vector<std::vector<std::vector<double>>> experiences_multiple;
+  std::vector<std::vector<std::vector<int>>> experiences_multiple;
   unsigned int current_exp_mul;
+  std::vector<std::vector<int>> bestposition_discrete;
   std::vector<std::vector<double>> bestposition;
   std::vector<double> vt_delta_pc_th_mul;
   std::vector<double> grid_spacing_ratio;

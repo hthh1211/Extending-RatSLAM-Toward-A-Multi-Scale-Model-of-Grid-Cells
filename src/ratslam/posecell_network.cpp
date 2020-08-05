@@ -1082,56 +1082,99 @@ MultiplePosecellNetwork::MultiplePosecellNetwork(std::vector<double>&  GridSpaci
 
 void MultiplePosecellNetwork::read_bestpositions(std::vector<std::vector<double>> &bestposecellposition,std::vector<double> &vt_delta_pc_ths)
 {
+  unsigned int posecell_index;
+  unsigned int coordinates;
+  double origin_xy;
+  double origin_th;
+  std::vector<double> posecell_position;
+  std::vector<int> discrete_bestposition;
+
+  bestposition_discrete.clear();
   bestposition=bestposecellposition;
   vt_delta_pc_th_mul=vt_delta_pc_ths;
+
+  for(posecell_index=0;posecell_index<bestposecellposition.size();++posecell_index)
+  {
+    discrete_bestposition.clear();
+    posecell_position=bestposecellposition[posecell_index];
+    origin_xy= floor((double)PC_DIM_XY_MUL[posecell_index] / 2.0);
+    origin_th=floor((double)PC_DIM_TH_MUL[posecell_index]/2.0);
+    for(coordinates=0;coordinates<posecell_position.size();++coordinates)
+    {
+      if(coordinates<=1.5)
+      {
+          discrete_bestposition.push_back(ceil(posecell_position[coordinates]-origin_xy-0.5));
+      }else{
+          discrete_bestposition.push_back(ceil(posecell_position[coordinates]-origin_th-0.5));
+      }
+    }
+      bestposition_discrete.push_back(discrete_bestposition);
+  }
+
 };
 
-double MultiplePosecellNetwork::get_delta_pc_mul(std::vector<std::vector<double>> &posecellposition)
+double MultiplePosecellNetwork::get_delta_pc_mul(std::vector<std::vector<int>> &posecellposition)
 {
-  unsigned int posecell_index=0;
-  int coordinate_index;
-  double distance=0;
+  volatile unsigned int posecell_index;
+  //volatile unsigned int posecell_size=posecellposition.size();
+  volatile int coordinate_index;
+  volatile double distance=0;
+  volatile double origin_th;
+  volatile double temp_best;
+  volatile double temp_pp;
+  volatile double temp_bp;
+  volatile double pc_th_corrected_mul;
 
-  //double temp0_0=posecellposition[0][0];
-  //double temp0_1=posecellposition[0][1];
-  //double temp0_2=posecellposition[0][2];
-  //double temp1_0=posecellposition[1][0];
-  //double temp1_1=posecellposition[1][1];
-  //double temp1_2=posecellposition[1][2];
+ // double temp0_0=posecellposition[0][0];
+ // double temp0_1=posecellposition[0][1];
+ // double temp0_2=posecellposition[0][2];
+ // double temp1_0=posecellposition[1][0];
+ // double temp1_1=posecellposition[1][1];
+ // double temp1_2=posecellposition[1][2];
+
+ // double temp10_0=bestposition_discrete[0][0];
+ // double temp10_1=bestposition_discrete[0][1];
+ // double temp10_2=bestposition_discrete[0][2];
+ // double temp11_0=bestposition_discrete[1][0];
+ // double temp11_1=bestposition_discrete[1][1];
+ // double temp11_2=bestposition_discrete[1][2];
 
   //std::vector< std::vector<double> >::const_iterator IndividualPoseCell; 
   //std::vector<double>::const_iterator element;
 
+
 //for (auto& IndividualPoseCell:posecellposition) 
 //for (IndividualPoseCell = posecellposition.begin(); IndividualPoseCell != posecellposition.end(); ++IndividualPoseCell)
-for (posecell_index; posecell_index<posecellposition.size();++posecell_index)
+for (posecell_index=0; posecell_index<posecellposition.size();++posecell_index)
   {
-    coordinate_index=0;
-    if(posecell_index==0)
-    {
+    //coordinate_index=0;
+    //if(posecell_index==0)
+    //{
       //for(auto& element:IndividualPoseCell)
       //for (element = IndividualPoseCell->begin(); element != IndividualPoseCell->end(); ++element)
+      origin_th=floor((double)PC_DIM_TH_MUL[posecell_index]/2.0);
       for(coordinate_index=0;coordinate_index<3;++coordinate_index)
       { 
-        //double temp=posecellposition[posecell_index][coordinate_index];
+         temp_pp=posecellposition[posecell_index][coordinate_index];
         //double temp_individual=IndividualPoseCell[coordinate_index];
-        //double temp_best=bestposition[posecell_index][coordinate_index];
+        temp_best=bestposition_discrete[posecell_index][coordinate_index];
         //int temp_pc=PC_DIM_XY_MUL[posecell_index];
         if(coordinate_index<=1)
        {
-           distance=distance+pow(get_min_delta_mul(bestposition[posecell_index][coordinate_index], posecellposition[posecell_index][coordinate_index], PC_DIM_XY_MUL[posecell_index])*grid_spacing_ratio[posecell_index], 2); 
+           distance=distance+pow(get_min_delta_mul(temp_best, temp_pp, PC_DIM_XY_MUL[posecell_index])*grid_spacing_ratio[posecell_index], 2); 
        }else{
-         double pc_th_corrected_mul = bestposition[posecell_index][coordinate_index] - vt_delta_pc_th_mul[posecell_index];
+          temp_bp=bestposition[posecell_index][coordinate_index];
+          pc_th_corrected_mul=  temp_bp- vt_delta_pc_th_mul[posecell_index];
           if (pc_th_corrected_mul < 0) 
-          pc_th_corrected_mul = PC_DIM_XY_MUL[posecell_index] + pc_th_corrected_mul;
-          if (pc_th_corrected_mul >= PC_DIM_XY_MUL[posecell_index] )
-          pc_th_corrected_mul = pc_th_corrected_mul - PC_DIM_XY_MUL[posecell_index] ;
-          distance=distance+pow(get_min_delta_mul(pc_th_corrected_mul, posecellposition[posecell_index][coordinate_index], PC_DIM_XY_MUL[posecell_index]), 2); 
+          {pc_th_corrected_mul = PC_DIM_TH_MUL[posecell_index] + pc_th_corrected_mul;};
+          if (pc_th_corrected_mul >= PC_DIM_TH_MUL[posecell_index])
+          {pc_th_corrected_mul = pc_th_corrected_mul - PC_DIM_TH_MUL[posecell_index] ;};
+          pc_th_corrected_mul=ceil(pc_th_corrected_mul-origin_th-0.5);
+          distance=distance+pow(get_min_delta_mul(pc_th_corrected_mul, temp_pp, PC_DIM_TH_MUL[posecell_index]), 2); 
        }
-           ++coordinate_index;
       }
-    }
-    ++posecell_index;
+    //}
+    //++posecell_index;
   };
   return sqrt(distance);
 }
@@ -1149,14 +1192,14 @@ void MultiplePosecellNetwork::create_experience()
   current_exp_mul = experiences_multiple.size() - 1;
   //PosecellExperience_Multiple * exp_mul = &experiences_multiple[current_exp_mul];
   //exp_mul->posecells_position=bestposition;
-  experiences_multiple[current_exp_mul]=bestposition;
+  experiences_multiple[current_exp_mul]=bestposition_discrete;
 //  pcvt->exps.push_back(current_exp);
 }
 
 
 MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_action()
 {
-  PosecellExperience_Multiple * experience_mul;
+  //std::vector<std::vector<int>>  experience_i;
   double delta_pc_mul;
   MultiplePosecellAction action = NO_ACTION;
 
@@ -1166,10 +1209,15 @@ MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_act
     create_experience();
     action = CREATE_NODE;
   } else {
-    //experience_mul = &experiences_multiple[current_exp_mul];
 
-    //delta_pc_mul = get_delta_pc_mul(experience_mul->posecells_position);
     delta_pc_mul = get_delta_pc_mul(experiences_multiple[current_exp_mul]);
+    //delta_pc_mul=0.0;
+
+   //volatile double index_exp=0;
+   // for(auto & experience:experiences_multiple){ 
+   //   volatile double  experience_size=experience.size();
+    //  ++index_exp;
+    //  }
 
    if (delta_pc_mul > EXP_DELTA_PC_THRESHOLD_MUL)
     {
@@ -1181,15 +1229,18 @@ MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_act
       double delta_pc_mul;
 
     // find the closest experience in pose cell space
-      for (i = 0; i < experiences_multiple.size(); i++)
+     // i=10000000;
+
+      for (i=0; i < experiences_multiple.size(); i++)
       {
         // make sure we aren't comparing to the current experience
         if (current_exp_mul == i)
           continue;
 
-        //experience_mul = &experiences_multiple[i];
-        //delta_pc_mul = get_delta_pc_mul(experience_mul->posecells_position);
-           delta_pc_mul = get_delta_pc_mul(experiences_multiple[i]);
+        //experience_i=experiences_multiple[i];
+        //volatile double  experience_size=experience_i.size();
+
+        delta_pc_mul = get_delta_pc_mul(experiences_multiple[i]);
         if (delta_pc_mul < min_delta)
         {
           min_delta = delta_pc_mul;
@@ -1197,6 +1248,7 @@ MultiplePosecellNetwork::MultiplePosecellAction MultiplePosecellNetwork::get_act
         }
       }
       
+      //min_delta=100;
       // if an experience is closer than the thres create a link
       if (min_delta < EXP_DELTA_PC_THRESHOLD_MUL)
       {

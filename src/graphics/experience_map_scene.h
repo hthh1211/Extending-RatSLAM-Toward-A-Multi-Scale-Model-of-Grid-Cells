@@ -53,10 +53,10 @@ public:
     int height = 800;
     
   std::wstring caption_name(module_id);
-  if(id_module==4){
+  if(id_module==2){
     param.DriverType = irr::video::EDT_OPENGL;
     }
-  if(id_module==1 || id_module==1){param.DriverType = irr::video::EDT_SOFTWARE;}
+  if(id_module==1 || id_module==4){param.DriverType = irr::video::EDT_SOFTWARE;}
   param.WindowSize=irr::core::dimension2d<irr::u32>(width, height);
   param.Bits=32;
   param.Fullscreen=false;

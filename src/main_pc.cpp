@@ -93,7 +93,7 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellN
     std::vector<double> th_vt_delta_pc_mul;
     double time_diff = (odo->header.stamp - prev_time).toSec();
     unsigned int index=0;
-    unsigned int size=pcns.size();
+   volatile  unsigned int size=pcns.size();
     //int pcns_size=pcns.size();
     //for (auto&& element:pcns)
     for(index;index<size+1;++index)
