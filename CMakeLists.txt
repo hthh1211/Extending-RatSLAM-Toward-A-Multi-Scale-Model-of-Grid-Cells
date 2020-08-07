@@ -77,16 +77,42 @@ target_link_libraries(ratslam_lv
   ${OPENGL_LIBRARIES}
   ${OpenCV_LIBRARIES})
 
-add_executable(ratslam_pc src/main_pc.cpp)
-target_link_libraries(ratslam_pc
+add_executable(ratslam_pc1 src/main_pc1.cpp)
+target_link_libraries(ratslam_pc1
   ${catkin_LIBRARIES} 
   ratslam
   ${IRRLICHT_LIBRARIES}
   ${OPENGL_LIBRARIES}
   ${OpenCV_LIBRARIES})
 
-add_executable(ratslam_em src/main_em.cpp)
-target_link_libraries(ratslam_em
+  add_executable(ratslam_pc2 src/main_pc2.cpp)
+target_link_libraries(ratslam_pc2
+  ${catkin_LIBRARIES} 
+  ratslam
+  ${IRRLICHT_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${OpenCV_LIBRARIES})
+
+
+
+add_executable(ratslam_em1 src/main_em1.cpp)
+target_link_libraries(ratslam_em1
+  ${catkin_LIBRARIES}
+  ratslam
+  ${IRRLICHT_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${OpenCV_LIBRARIES})
+
+  add_executable(ratslam_em2 src/main_em2.cpp)
+target_link_libraries(ratslam_em2
+  ${catkin_LIBRARIES}
+  ratslam
+  ${IRRLICHT_LIBRARIES}
+  ${OPENGL_LIBRARIES}
+  ${OpenCV_LIBRARIES})
+
+    add_executable(ratslam_map src/main_map.cpp)
+target_link_libraries(ratslam_map
   ${catkin_LIBRARIES}
   ratslam
   ${IRRLICHT_LIBRARIES}
@@ -132,11 +158,14 @@ foreach(infile ${infiles})
 endforeach()
 
 add_dependencies(ratslam_lv ratslam_ros_generate_messages_cpp)
-add_dependencies(ratslam_pc ratslam_ros_generate_messages_cpp)
-add_dependencies(ratslam_em ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_pc1 ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_pc2 ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_em1 ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_em2 ratslam_ros_generate_messages_cpp)
+add_dependencies(ratslam_map ratslam_ros_generate_messages_cpp)
 add_dependencies(ratslam_vo ratslam_ros_generate_messages_cpp)
 
-install(TARGETS ratslam ratslam_lv ratslam_pc ratslam_em ratslam_vo
+install(TARGETS ratslam ratslam_lv ratslam_pc1 ratslam_pc2 ratslam_em1 ratslam_em2 ratslam_map ratslam_vo
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 

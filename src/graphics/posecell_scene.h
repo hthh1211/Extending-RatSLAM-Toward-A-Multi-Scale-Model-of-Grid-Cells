@@ -34,28 +34,32 @@
 
 #include <irrlicht/irrlicht.h>
 
+#include <irrlicht/SExposedVideoData.h>
+
+#include <irrlicht/IVideoDriver.h>
+
+//#include <gtk-2.0/gdk/gdkx.h>
+
 namespace ratslam
 {
 
 class PosecellScene
 {
 public:
-  PosecellScene(ptree & settings, PosecellNetwork *in_pc, wchar_t* module_id, int id_module) :
+  PosecellScene(ptree & settings, PosecellNetwork *in_pc, wchar_t* module_id, int id_module):
       pose_cells_scene(NULL), particles(NULL), position_line(NULL), pose_cell_history(NULL), posecells(in_pc)
   {
   window_width = 400;
   window_height = 400;
   std::wstring caption_name(L"openRatSLAM Pose Cell Network "+ std::wstring(module_id));
-  if(id_module==1){
-    param.DriverType = irr::video::EDT_OPENGL;
-    }
-  if(id_module==2){param.DriverType = irr::video::EDT_SOFTWARE;}
+  param.DriverType = irr::video::EDT_OPENGL;
+ // if(id_module==2){param.DriverType = irr::video::EDT_SOFTWARE;}
   param.WindowSize=irr::core::dimension2d<irr::u32>(window_width, window_height);
   param.Bits=32;
   param.Fullscreen=false;
   param.Stencilbuffer=false;
   param.Vsync=false;
-  param.WindowId;
+  //param.WindowId;
   device = irr::createDeviceEx(param);
     //device = irr::createDevice(irr::video::EDT_OPENGL, irr::core::dimension2d<irr::u32>(window_width, window_height), 32, false, false, false);
     device->setWindowCaption(caption_name.c_str());
@@ -65,6 +69,8 @@ public:
 
     get_setting_from_ptree(media_path, settings, "media_path", (std::string)"");
     pose_cells_scene = scene->createNewSceneManager(false);
+
+    //irr::video::SExposedVideoData(){OpenGLLinux.X11Display=0; OpenGLLinux.X11Context=0; OpenGLLinux.X11Window=wuhh;};
 
     particles = new irr::scene::IBillboardSceneNode*[NUM_PARTICLES];
 
@@ -192,7 +198,7 @@ public:
   void draw_all()
   {
     device->run();
-   driver->beginScene(true, true, irr::video::SColor(255, 0, 0, 0));
+   driver->beginScene(true, true, irr::video::SColor(255, 0, 0, 0),irr::video::SExposedVideoData());
     pose_cells_scene->drawAll();
     driver->endScene();
   }
@@ -221,6 +227,8 @@ private:
 
   unsigned int window_width, window_height;
 };
+
+
 
 }
 ;

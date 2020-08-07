@@ -73,14 +73,14 @@ template<typename T> void publish_posecells_message(T& element,ros::Publisher &p
             pc_output.dest_id = element->get_current_exp_id();
             pc_output.relative_rad = element->get_relative_rad();
             //if(index==1){
-              pub_pc.publish(pc_output);
+              //pub_pc.publish(pc_output);
               //}
             //if(index==2){pub_pc_2->publish(pc_output);}
             ROS_DEBUG_STREAM("PC:action_publish{odo}{" << ros::Time::now() << "} action{" << pc_output.header.seq << "}=" <<  pc_output.action << " src=" << pc_output.src_id << " dest=" << pc_output.dest_id);
           }
 }
 
-void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellNetwork*> &pcns, ratslam::MultiplePosecellNetwork * mpc,std::vector<ros::Publisher> &pub_pc)
+void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellNetwork*> &pcns, std::vector<ros::Publisher> &pub_pc)
 //void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellNetwork*> &pcns, std::vector<ros::Publisher> &pub_pc)
 {
   ROS_DEBUG_STREAM("PC:odo_callback{" << ros::Time::now() << "} seq=" << odo->header.seq << " v=" << odo->twist.twist.linear.x << " r=" << odo->twist.twist.angular.z);
@@ -96,28 +96,15 @@ void odo_callback(nav_msgs::OdometryConstPtr odo, std::vector<ratslam::PosecellN
    volatile  unsigned int size=pcns.size();
     //int pcns_size=pcns.size();
     //for (auto&& element:pcns)
-    for(index;index<size+1;++index)
+    for(index;index<size;++index)
     {  
       //auto& element=posecell_module(index,pcns.size(),);
            
           //if(index==module_display_id){
             
             //}
-          if(index==size){
-            mpc->read_bestpositions(best_xyth_multiple,th_vt_delta_pc_mul);
-            publish_posecells_message(mpc,pub_pc[index]);
-            th_vt_delta_pc_mul.clear();
-           }
-          else{
             pcns[index]->on_odo(odo->twist.twist.linear.x, odo->twist.twist.angular.z, time_diff);
             publish_posecells_message(pcns[index],pub_pc[index]);
-            th_vt_delta_pc_mul.push_back(pcns[index]->vt_delta());
-            best_xyth.push_back(pcns[index]->x());
-            best_xyth.push_back(pcns[index]->y());
-            best_xyth.push_back(pcns[index]->th());
-            best_xyth_multiple.push_back(best_xyth);
-            best_xyth.clear();
-          };
     }
     
 //     mpc->read_bestpositions(best_xyth_multiple,th_vt_delta_pc_mul);
@@ -194,41 +181,41 @@ int main(int argc, char * argv[])
 
 
 
-  ratslam::PosecellNetwork * pc_1 = new ratslam::PosecellNetwork(ratslam_settings_1);
+  //ratslam::PosecellNetwork * pc_1 = new ratslam::PosecellNetwork(ratslam_settings_1);
   ratslam::PosecellNetwork * pc_2 = new ratslam::PosecellNetwork(ratslam_settings_2);
   std::vector<ratslam::PosecellNetwork*> pcns;
-  pcns.push_back(pc_1);
+  //pcns.push_back(pc_1);
   pcns.push_back(pc_2);
 
-  std::vector<double> POSECELL_XSIZE;
-    std::vector<double> grid_spacing_ratio;
-  double EXP_DELTA_PC_THRESHOLD_MUL;
-  std::vector<int> PC_DIM_XY_MUL;
-  std::vector<int> PC_DIM_TH_MUL;
+  //std::vector<double> POSECELL_XSIZE;
+  //  std::vector<double> grid_spacing_ratio;
+  //double EXP_DELTA_PC_THRESHOLD_MUL;
+  //std::vector<int> PC_DIM_XY_MUL;
+  //std::vector<int> PC_DIM_TH_MUL;
 
-  for (auto&& element:pcns)
-  {  
-      POSECELL_XSIZE.push_back(element->posecell_xsize());
-      PC_DIM_XY_MUL.push_back(element->pc_dim_xy());
-      PC_DIM_TH_MUL.push_back(element->pc_dim_th());
-      EXP_DELTA_PC_THRESHOLD_MUL=element->exp_elta_pc_threshold(); //only the smallest module threshold is used.
-  }
-  double smallest_posecell_xsize=POSECELL_XSIZE[POSECELL_XSIZE.size()-1];
-  for  (auto&& element:POSECELL_XSIZE){grid_spacing_ratio.push_back(element/smallest_posecell_xsize);};
+  //for (auto&& element:pcns)
+  //{  
+   //   POSECELL_XSIZE.push_back(element->posecell_xsize());
+   //   PC_DIM_XY_MUL.push_back(element->pc_dim_xy());
+   //   PC_DIM_TH_MUL.push_back(element->pc_dim_th());
+   //   EXP_DELTA_PC_THRESHOLD_MUL=element->exp_elta_pc_threshold(); //only the smallest module threshold is used.
+ // }
+ // double smallest_posecell_xsize=POSECELL_XSIZE[POSECELL_XSIZE.size()-1];
+  //for  (auto&& element:POSECELL_XSIZE){grid_spacing_ratio.push_back(element/smallest_posecell_xsize);};
 
-  ratslam::MultiplePosecellNetwork *mpc=new ratslam::MultiplePosecellNetwork(grid_spacing_ratio,PC_DIM_XY_MUL,PC_DIM_TH_MUL, EXP_DELTA_PC_THRESHOLD_MUL);
+  //ratslam::MultiplePosecellNetwork *mpc=new ratslam::MultiplePosecellNetwork(grid_spacing_ratio,PC_DIM_XY_MUL,PC_DIM_TH_MUL, EXP_DELTA_PC_THRESHOLD_MUL);
 
-  ros::Publisher pub_pc_1 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_1", 0);
+  //ros::Publisher pub_pc_1 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_1", 0);
   ros::Publisher pub_pc_2 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_2", 0);
 
-  ros::Publisher pub_pc_4 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_4", 0);
+  //ros::Publisher pub_pc_4 = node.advertise<ratslam_ros::TopologicalAction>(topic_root + "/PoseCell/TopologicalAction_4", 0);
   std::vector<ros::Publisher> pub_pc;
-  pub_pc.push_back(pub_pc_1);
+  //pub_pc.push_back(pub_pc_1);
   pub_pc.push_back(pub_pc_2);
 
-  pub_pc.push_back(pub_pc_4);
+  //pub_pc.push_back(pub_pc_4);
 
-  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, pcns, mpc,pub_pc), ros::VoidConstPtr(),
+  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, pcns,pub_pc), ros::VoidConstPtr(),
                                                                     ros::TransportHints().tcpNoDelay());          
 
 //  ros::Subscriber sub_odometry = node.subscribe<nav_msgs::Odometry>(topic_root + "/odom", 0, boost::bind(odo_callback, _1, pcns,pub_pc), ros::VoidConstPtr(),
@@ -244,9 +231,9 @@ int main(int argc, char * argv[])
   {
   //pcs_3 = new ratslam::PosecellScene(draw_settings, pc_3,L"3");  
     pcs_2 = new ratslam::PosecellScene(draw_settings, pc_2,L"2",2);
-  pcs_1 = new ratslam::PosecellScene(draw_settings, pc_1,L"1",1);
+  //pcs_1 = new ratslam::PosecellScene(draw_settings, pc_1,L"1",1);
 
-  pcss.push_back(pcs_1);
+  //pcss.push_back(pcs_1);
   pcss.push_back(pcs_2);
   }
 #endif
